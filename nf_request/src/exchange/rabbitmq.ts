@@ -1,6 +1,11 @@
 import amqp from 'amqplib';
 
-export class Producer {
+export interface Producer {
+    publishMessage(routingKey: string, message: string): Promise<void>;
+    enqueue(queue: string, message: string): Promise<void>;
+}
+
+export class RabbitMQ implements Producer {
     private channel: any
 
     private constructor(private readonly exchangeName: string, private readonly connectUrl: string) {
@@ -15,24 +20,29 @@ export class Producer {
     }
 
     public static create(exchangeName: string, connectUrl: string) {
-        return new Producer(exchangeName, connectUrl)
+        return new RabbitMQ(exchangeName, connectUrl)
     }
 
     public async publishMessage(routingKey: string, message: string) {
-        await this.channel.assertExchange(this.exchangeName, "direct");
+        if (!this.channel) {
+            await this.createChannel();
+        }
+
+        await this.channel.assertExchange(this.exchangeName, "direct", { durable: false });
 
         const dataDetails = {
             logType: routingKey,
             message: message,
             dateTime: new Date(),
         };
+
         await this.channel.publish(
             this.exchangeName,
             routingKey,
             Buffer.from(JSON.stringify(dataDetails))
         );
 
-        console.log(`new ${routingKey} ${this.exchangeName}`);
+        console.log(`[SENT] routingKey: ${routingKey} exchangeName:${this.exchangeName} - ${message}`);
     }
 
     public async enqueue(queue: string, message: string) {
@@ -42,6 +52,6 @@ export class Producer {
 
         await this.channel.sendToQueue(queue, Buffer.from(message));
 
-        console.log("Sent %s", message);
+        console.log(`[SENT] queue:${queue} - ${message}`, message);
     }
 }

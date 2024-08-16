@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os/exec"
+	"net/http"
 
 	"github.com/go-pdf/fpdf"
 	rabbitmq "github.com/williamMDsilva/microservice-poc/worker_create_pdf/infra/queue/rabbitMQ"
@@ -45,11 +45,28 @@ func (f Functions) genPdf(message []byte) {
 		panic(err)
 	}
 
-	// TODO - fix move file to fake S3
-	cmd := exec.Command(fmt.Sprintf("mv ./%s ../fake_s3/%s", fileName, fileName))
-	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+	// // TODO - fix move file to fake S3
+	// cmd := exec.Command(fmt.Sprintf("mv ./%s ../fake_s3/%s", fileName, fileName))
+	// if err := cmd.Run(); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	//TODO - notify dowload service
+	requestURL := fmt.Sprintf("http://localhost:4001/api/document/status/%s", nfRequest.Props.Id)
+
+	var client = &http.Client{}
+
+	req, err := http.NewRequest(http.MethodPatch, requestURL, nil)
+	if err != nil {
+		log.Fatalln(err)
 	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Printf("StatusCode ", resp.StatusCode)
+
 }
 
 func (f Functions) Consume() {

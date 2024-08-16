@@ -9,7 +9,7 @@ export class EnqueueRequestNf implements RequestGatewayNFPub {
         return new EnqueueRequestNf(producerBroker)
     }
 
-    public async emmit_event(nf: NF, kind: string) {
+    public async enqueue(nf: NF, kind: string) {
         const message: string = JSON.stringify({ kind, ...nf })
 
         await this.producerBroker.enqueue(kind, message)
