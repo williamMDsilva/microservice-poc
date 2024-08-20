@@ -2,13 +2,17 @@
 
 ## Workflow
 
-### Firts Workflow
+### Workflow V1
 
 <img src="./workflow.png">
 
-### Workflow
+### Workflow V2
 
 <img src="./workflowUpdated.png">
+
+### Current Workflow
+
+<img src="./arch.png">
 
 ## dependences
 
